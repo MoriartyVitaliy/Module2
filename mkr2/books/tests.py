@@ -1,31 +1,35 @@
 from django.test import TestCase
 from books.models import Author, Book
-
-# Create your tests here.
+from datetime import date
+from decimal import Decimal
 
 class AuthorTestCase(TestCase):
     def setUp(self):
-        Author.objects.create(first_name="George", last_name="Orwell")
-        Author.objects.create(first_name="Aldous", last_name="Huxley")
+        Author.objects.create(name="George Orwell", bio="George Orwell was an English novelist and essayist.")
+        Author.objects.create(name="Aldous Huxley", bio="Aldous Huxley was an English writer and philosopher.")
 
-    def test_author_full_name(self):
-        """Author full name is correctly displayed"""
-        orwell = Author.objects.get(first_name="George")
-        huxley = Author.objects.get(first_name="Aldous")
-        self.assertEqual(orwell.full_name(), 'George Orwell')
-        self.assertEqual(huxley.full_name(), 'Aldous Huxley')
+    def test_author_str(self):
+        """Author string representation is the name"""
+        orwell = Author.objects.get(name="George Orwell")
+        huxley = Author.objects.get(name="Aldous Huxley")
+        self.assertEqual(str(orwell), 'George Orwell')
+        self.assertEqual(str(huxley), 'Aldous Huxley')
 
-
-#Test for books
 class BookTestCase(TestCase):
     def setUp(self):
-        author = Author.objects.create(first_name="George", last_name="Orwell")
-        Book.objects.create(title="1984", author=author)
-        Book.objects.create(title="Animal Farm", author=author)
+        orwell = Author.objects.create(name="George Orwell", bio="George Orwell was an English novelist and essayist.")
+        self.book1 = Book.objects.create(title="1984", description="A dystopian novel", publication_date=date(1949, 6, 8), price=Decimal('9.99'))
+        self.book2 = Book.objects.create(title="Animal Farm", description="A political allegory", publication_date=date(1945, 8, 17), price=Decimal('7.99'))
+        self.book1.authors.add(orwell)
+        self.book2.authors.add(orwell)
 
-    def test_book_title(self):
-        """Book title is correctly displayed"""
-        book1 = Book.objects.get(title="1984")
-        book2 = Book.objects.get(title="Animal Farm")
-        self.assertEqual(book1.title, '1984')
-        self.assertEqual(book2.title, 'Animal Farm')
+    def test_book_str(self):
+        """Book string representation is the title"""
+        self.assertEqual(str(self.book1), '1984')
+        self.assertEqual(str(self.book2), 'Animal Farm')
+
+    def test_book_author_relationship(self):
+        """Books have the correct author"""
+        orwell = Author.objects.get(name="George Orwell")
+        self.assertIn(orwell, self.book1.authors.all())
+        self.assertIn(orwell, self.book2.authors.all())
